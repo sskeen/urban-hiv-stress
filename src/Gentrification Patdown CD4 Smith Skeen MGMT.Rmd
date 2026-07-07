@@ -1,7 +1,7 @@
 ---
 title: "Gentrification Patdown CD4 Smith Skeen MGMT"
 author: "Ethan A. Smith"
-date: "2026-06-16"
+date: "2026-07-06"
 output: html_document
 ---
 
@@ -30,7 +30,7 @@ We tested these hypotheses via a secondary cross-sectional analysis of baseline 
 
 ```{r Pull NOAH, ACS,}
 
-noah <- read_sas("C:/Users/Ethan/Box/nola-gem/Data/Baseline Data/noah_baseline365_scored.sas7bdat")
+noah <- read_sas("C:/Users/Ethan/...noah_baseline365_scored.sas7bdat")
 
 #Concatenate into single address variable 
 noah$full_address <- paste(noah$street_address, noah$city, noah$state, noah$zipcode, sep = ", ")
@@ -40,7 +40,7 @@ noah_tst <- noah %>%
 
 #patdowns
 
-df_2018 <- read.csv("C:/Users/Ethan/Desktop/SBM_abstract/Raw Data/df_18.csv")
+df_2018 <- read.csv("C:/Users/Ethan/.../df_18.csv")
 
 df_2018 <- df_2018 %>%
   mutate(patdown = ifelse(grepl("Search Occurred: Yes;Search Types: Pat-down;|Pat down: Yes", ActionsTaken), 1, 0),
@@ -293,7 +293,7 @@ final_data <- left_join(gen_data18, counts, by = "GEOID")
 
 ################################ Violent Crime #################################
 
-calls2018_conf <- read.csv("C:/Users/Ethan/Desktop/SBM_abstract/911_2018_conf.csv")
+calls2018_conf <- read.csv("C:/Users/Ethan/...911_2018_conf.csv")
 
 #Confirmed
 calls2018_conf <- calls2018_conf[!is.na(calls2018_conf$Longitude) & !is.na(calls2018_conf$Latitude), ]
@@ -321,6 +321,7 @@ counts_911_conf <- joined_data_911_conf %>%
 
 final_data <- left_join(final_data, counts_911_conf, by = "GEOID")
 
+## This is Ecological Set used for Model E 
 
 ```
 
