@@ -5,7 +5,7 @@ library(leaflet.providers)
 library(htmltools)
 library(dplyr)
 
-sbm_census_level <- read.csv("C:/Users/Ethan/Desktop/SBM_abstract/sbm_census_level.csv")
+sbm_census_level <- read.csv("C:/Users/Ethan/...sbm_census_level.csv")
 
 sbm_census_level <- sbm_census_level %>%
   mutate(
@@ -83,7 +83,9 @@ map_sf$color <- bivar_palette[map_sf$bivar_class]
 
 #####
 
-
+# 
+summary(map_sf$surplus_rate)
+quantile(map_sf$surplus_rate, probs = c(1/3, 2/3), na.rm = TRUE)
 map_sf <- map_sf %>%
   mutate(
     saf_class = case_when(
@@ -99,7 +101,7 @@ map_sf <- map_sf %>%
     bivar_class = paste0(saf_class, "-", gen_class)
   )
 
-
+citation('leaflet')
 bivar_palette <- c(
   "Low-Non-Gentrifiable"     = "#d6dbe9",  # light blue
   "Low-Gentrifiable"         = "#bfe3dc",  # light teal
@@ -167,7 +169,8 @@ leaflet(map_sf) %>%
   ) %>%
   addControl(html = legend_html, position = "bottomright")
 
-
+map_sf$saf_class
+map_sf$surplus_rate
 
 ############## Calc  Moran's I
 neighbors <- poly2nb(map_sf2, queen = TRUE)  # Identifies neighbors
@@ -183,3 +186,31 @@ fav_saf <- moran.test(map_sf2$fav_rate, weights_list, zero.policy = TRUE)
 
 print(moran_saf)
 print(fav_saf)
+
+
+############ Model E
+
+## Ecological Analysis / Model E: 
+
+
+summary(subst$ice_race)
+
+subst$ice_low <- ifelse(subst$ice_race<=-0.7814,1,0)
+
+table(subst$ice_low)
+
+ice_race_inc <- glm.nb(surplus_count ~ ViolentCrime_rate + as.factor(ice_low) * as.factor(gen_cat18), offset(log(pop)), data = subst)
+
+ice_race_inc %>% 
+  tbl_regression(exponentiate = TRUE) 
+
+summary(ice_race_inc)
+
+nong <- sub
+
+ice_race_inc <- glm.nb(surplus_count ~ as.factor(ice_low), offset(log(pop)), data = subst)
+
+ice_race_inc %>% 
+  tbl_regression(exponentiate = TRUE) 
+
+summary(ice_race_inc)
