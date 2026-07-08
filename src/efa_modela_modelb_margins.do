@@ -3,7 +3,7 @@
 		*																		               *
 		*	Law enforcement–related stress and gentrification as determinants of CD4 decline   *
 		*		efa_modela_modelb_margins.do										           *
-		*		Simone J. Skeen (07-01-2026)									               *
+		*		Simone J. Skeen (07-08-2026)									               *
 		*																		               *
 		*--------------------------------------------------------------------------------------*
 
@@ -12,7 +12,7 @@ set more off
 
 * wd
 
-cd "C:\Users\sskee\OneDrive\Documents\02_tulane\01_research\noah\urban_life_stress_hiv\inputs\data"
+cd "~/anaconda_projects/urban-hiv-stress/data"
 clear
 
 * set scheme, font
@@ -106,13 +106,6 @@ save urban_life_stress_hiv_n274, replace
 		tab vlcat
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-		///// Table 2. NOAH cohort residential socio-economics, crime and law enforcement exposures (n = 274) at baseline /////
-
-				*** SJS 6/24: tabulated in R by EAS
-		
-		//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 		
 		///////////////// *-----------------------------* /////////////////
@@ -459,10 +452,10 @@ use urban_life_stress_hiv_n274, clear
 
 		* n395 loadings / indices		
 				
-		logit hads_depressbin ///
-			pd_call_010m ice_race_n sdi_n ///
-			zF1_w_n395 zF2_w_n395 zstigma_sum i.medhx___36 zlehtotal_sum_n i.incarcerated i.homeless_bin ///
-			i.race_bin i.assigned_sex i.age60, or vce(cluster geoid) nolog	
+		*logit hads_depressbin ///
+		*	pd_call_010m ice_race_n sdi_n ///
+		*	zF1_w_n395 zF2_w_n395 zstigma_sum i.medhx___36 zlehtotal_sum_n i.incarcerated i.homeless_bin ///
+		*	i.race_bin i.assigned_sex i.age60, or vce(cluster geoid) nolog	
 
 		* _alt_ specification - n274 loadings / indices		
 
@@ -478,7 +471,7 @@ use urban_life_stress_hiv_n274, clear
 
 		* margins
 			
-		*** SJS 7/12: using Model A5 specification / post-estimation w/ n395 loadings
+		*** SJS 7/8: using Model A5 specification / post-estimation w/ n274 loadings
 					
 		* LEH - median-split	
 
@@ -492,16 +485,17 @@ use urban_life_stress_hiv_n274, clear
 
 		logit hads_depressbin ///
 			pd_call_010m ice_race_n sdi_n ///
-			zF1_w_n395 zF2_w_n395 zstigma_sum i.medhx___36 i.zlehtotal_sum_n_mdn i.incarcerated i.homeless_bin ///
+			zF1_w_n274 zF2_w_n274 zstigma_sum i.medhx___36 i.zlehtotal_sum_n_mdn i.incarcerated i.homeless_bin ///
 			i.race_bin i.assigned_sex i.age60, or vce(cluster geoid) nolog
 
 		* F1 - display quartiles
 
-		summ zF1_w_n395, detail
+		summ zF1_w_n274, detail
 
 		* marginal effects at representative values
 
-		margins, dydx(zlehtotal_sum_n_mdn) at(zF1_w_n395 = (-1.3206 -.8746 -.0885 .6091 1.9727)) vsquish	
+		*margins, dydx(zlehtotal_sum_n_mdn) at(zF1_w_n395 = (-1.3206 -.8746 -.0885 .6091 1.9727)) vsquish  *** SJS 7/8: these are the n395 values	
+		margins, dydx(zlehtotal_sum_n_mdn) at(zF1_w_n274 = (-1.308 -.7997 -.2360 .7244 2.042)) vsquish
 			
 		*marginsplot, recast(line) recastci(rarea) title(" ") ///
 		*plot1opts(lcolor("204 0 204")) ci1opts(color("204 0 204%15")) ///
@@ -671,10 +665,10 @@ use urban_life_stress_hiv_n274, clear
 
 		* n395 loadings / indices		
 				
-		logit cd4_bin ///
-			pd_call_010m ice_race_n sdi_n ///
-			zF1_w_n395 zF2_w_n395 i.art i.audit_bin i.dailypolyuse ///
-			i.assigned_sex i.age60 i.race_bin, or vce(cluster geoid) nolog	
+		*logit cd4_bin ///
+		*	pd_call_010m ice_race_n sdi_n ///
+		*	zF1_w_n395 zF2_w_n395 i.art i.audit_bin i.dailypolyuse ///
+		*	i.assigned_sex i.age60 i.race_bin, or vce(cluster geoid) nolog	
 
 		* _alt_ specification - n274 loadings / indices	
 			
@@ -743,10 +737,57 @@ use urban_life_stress_hiv_n395, clear
 
 		margins, dydx(assigned_sex) at(zulss21_n = (-.6200 .6671 1.9542)) vsquish
 
+* restrict to geolinkable subset: n =274	
+		
+use urban_life_stress_hiv_n274, clear			
+		
+		keep if race_bin == 1		
+		*keep if assigned_sex == 1 & race_bin == 1
+		*keep if assigned_sex == 0 & race_bin == 1
+
+		* cont z-standardized ULSS
+
+		foreach i of varlist ulss1_n-ulss21_n {
+			egen z`i' = std(`i')
+			}
+
+		* factor varlist
+
+		foreach i of varlist art audit_bin dailypolyuse ///
+			assigned_sex age60 {
+			logit cd4_bin i.`i', or nolog
+			}
+
+		* z-standardized ULSS cont varlist	
+			
+		foreach i of varlist zF1_w_n395 zF2_w_n395 zulss1_n-zulss21_n {
+			logit cd4_bin `i', or nolog
+			}
+
+		* crude bivar - confirmatory	
+			
+		*logit cd4_bin zulss21_n, or nolog
+				
+		* n274
+				
+		logit cd4_bin zulss21_n i.art i.audit_bin i.dailypolyuse ///
+			i.assigned_sex i.age60, or nolog			
+		
 
  *---------------------------------*
- * End of urban_life_stress_hiv.do *			
- *---------------------------------*		
+ * End of efa_modela_modelb.do 	   *			
+ *---------------------------------*
+ 
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
 		
 		
 		
