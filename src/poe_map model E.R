@@ -1,11 +1,11 @@
 #map POE
 library(leaflet)
-library(leaflet)
 library(leaflet.providers)
 library(htmltools)
 library(dplyr)
+library(glmmTMB)
 
-sbm_census_level <- read.csv("C:/Users/Ethan/...sbm_census_level.csv")
+sbm_census_level <- read.csv("C:/Users/Ethan/Desktop/SBM_abstract/sbm_census_level.csv")
 
 sbm_census_level <- sbm_census_level %>%
   mutate(
@@ -20,6 +20,7 @@ sbm_census_level <- sbm_census_level %>%
     patdown_wht_rate = (patdown_wht_count / white) * 1000,
     patdown_blk_rate = (patdown_blk_count / black) * 1000,
     ViolentCrime_rate = (ViolentCrime_conf_count / pop) * 1000,
+    ViolentCrime_rate10k = (ViolentCrime_conf_count / pop) * 10000,
     drugs_rate = (drugs_count / pop) *1000,
     surplus_rate = (surplus_count / pop) *1000
   )
@@ -30,7 +31,8 @@ subst <- sbm_census_level %>% dplyr::select(GEOID,
                                             arrest_wht_count,	arrest_blk_count, surplus_wht_count,	surplus_blk_count, citation_wht_count,	
                                             citation_blk_count,	patdown_wht_count,	patdown_blk_count, Homicide_count, Robbery_count,
                                             Weapon_count,	Assault_count,	ViolentCrime_count,	ShotsFired_count,	drugs_911_count,
-                                            drugs_wht_rate, drugs_blk_rate, arrest_wht_rate, arrest_blk_rate, surplus_wht_rate, surplus_blk_rate, citation_wht_rate, citation_blk_rate, patdown_wht_rate, patdown_blk_rate
+                                            drugs_wht_rate, drugs_blk_rate, arrest_wht_rate, arrest_blk_rate, surplus_wht_rate, surplus_blk_rate, citation_wht_rate, citation_blk_rate, patdown_wht_rate, patdown_blk_rate,
+                                            ViolentCrime_rate10k
 )
 
 subst <- subst %>% filter(pop!=0)
@@ -194,23 +196,32 @@ print(fav_saf)
 
 
 summary(subst$ice_race)
-
 subst$ice_low <- ifelse(subst$ice_race<=-0.7814,1,0)
 
-table(subst$ice_low)
+summary(subst$ice_race_inc)
+subst$ice_low_inc <- ifelse(subst$ice_race<=-0.4375,1,0)
 
-ice_race_inc <- glm.nb(surplus_count ~ ViolentCrime_rate + as.factor(ice_low) * as.factor(gen_cat18), offset(log(pop)), data = subst)
 
-ice_race_inc %>% 
+ViolentCrime_rate <- glm.nb(surplus_count ~ ViolentCrime_rate, offset(log(pop)), data = subst)
+
+ViolentCrime_rate %>% 
   tbl_regression(exponentiate = TRUE) 
 
-summary(ice_race_inc)
-
-nong <- sub
-
-ice_race_inc <- glm.nb(surplus_count ~ as.factor(ice_low), offset(log(pop)), data = subst)
-
-ice_race_inc %>% 
+ice_low <- glm.nb(surplus_count ~ as.factor(ice_low), offset(log(pop)), data = subst)
+ice_low %>% 
   tbl_regression(exponentiate = TRUE) 
 
-summary(ice_race_inc)
+gencat18 <- glm.nb(surplus_count ~ as.factor(gen_cat18), offset(log(pop)), data = subst)
+gencat18 %>% 
+  tbl_regression(exponentiate = TRUE) 
+
+gencat18_int <- glm.nb(surplus_count ~ as.factor(gen_cat18)*as.factor(ice_low), offset(log(pop)), data = subst)
+gencat18_int %>% 
+  tbl_regression(exponentiate = TRUE) 
+
+### Adjusted Model 
+
+adj_model <- glm.nb(surplus_count ~ ViolentCrime_rate + as.factor(ice_low) * as.factor(gen_cat18), offset(log(pop)), data = subst)
+adj_model %>% 
+  tbl_regression(exponentiate = TRUE) 
+
