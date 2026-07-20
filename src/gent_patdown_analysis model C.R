@@ -116,7 +116,7 @@ logistic_model_adj <- glm(
     ice_race +
     pd_call_010m + 
     vc_call_010m +
-    age_current + 
+    as.factor(age60) + 
     as.factor(race___4) + 
     gender +
     as.factor(gen_cat18), 
